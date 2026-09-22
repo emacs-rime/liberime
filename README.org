@@ -38,9 +38,21 @@ release中提供了带依赖的打包文件，请参考后续「预编译」一�
 
 如Homebrew:  ~brew install librime~ 
 ** 预编译（推荐）
-可以在[[https://github.com/emacs-rime/liberime/releases][release]]中下载预编译好的二进制文件。注意，没有标明 ~-with-deps~ 的压缩包里均仅包含 ~liberime-core~ 的二进制文件。
+可以运行 ~M-x liberime-download-module~ 自动下载并安装预编译好的二进制文件。
+模块以 ~liberime-core.so~（Windows 为 ~liberime-core.dll~）的形式直接安装到
+liberime 的包目录中，~liberime-load~ 通过 ~load-path~ 即可找到，无需手动设置
+~liberime-module-file~。下载的 release 版本默认为已安装 liberime 包的版本
+（取自 ~Version:~ 头），保证二进制与 elisp 匹配；带前缀参数调用
+（~C-u M-x liberime-download-module~）可手动选择其他 release tag。
+注意：重新安装或升级 liberime 包后可能需要重新运行此命令。
 
-需要在配置中将 ~liberime-module-file~ 指向 ~liberime-core~ 二进制文件：
+Windows 平台固定使用附带依赖 DLL 和 ~rime-data~ 的压缩包，依赖 DLL 与
+~liberime-core.dll~ 一并安装到包目录，~rime-data~ 安装为包目录下的
+~rime-data/~ 子目录，~liberime-get-shared-data-dir~ 会自动使用它。
+
+也可以从[[https://github.com/emacs-rime/liberime/releases][release]]手动下载预编译好的二进制文件。注意，没有标明 ~-with-deps~ 的压缩包里均仅包含 ~liberime-core~ 的二进制文件。
+
+手动下载时需要在配置中将 ~liberime-module-file~ 指向 ~liberime-core~ 二进制文件：
 
 #+begin_src elisp
 (setq liberime-module-file "/PATH/TO/YOUR/liberime-core.suffix")
