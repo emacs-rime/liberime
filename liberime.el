@@ -175,8 +175,12 @@ directory stripped; other members are skipped.  Pure Elisp."
                   (write-region data-start (+ data-start size) file nil 'silent))))
             (setq pos (+ data-start (* 512 (ceiling size 512))))))))))
 
+(declare-function zlib-decompress-region "decompress.el")
+
 (defun liberime--extract-tar-gz (archive dest)
   "Extract tar.gz ARCHIVE into DEST, stripping the top-level directory."
+  (unless (fboundp 'zlib-decompress-region)
+    (error "Liberime: this Emacs lacks zlib support, cannot extract %s" archive))
   (with-temp-buffer
     (set-buffer-multibyte nil)
     (insert-file-contents-literally archive)
