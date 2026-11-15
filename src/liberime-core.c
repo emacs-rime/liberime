@@ -294,6 +294,22 @@ static emacs_value _build_candidate_list(emacs_env *env,
 static bool _select_temporary_schema(EmacsRime *rime,
                                      RimeSessionId session_id,
                                      const char *schema_id) {
+  // Fast path: the session may already run the wanted schema.  Callers
+  // reusing a persistent session hit this on every lookup after the
+  // first.  select_schema rebuilds the whole engine pipeline and
+  // persists user.yaml (Switcher::SetActiveSchema saves unconditionally)
+  // even when the schema is unchanged, so the get_status round trip is
+  // well spent.
+  {
+    RIME_STRUCT(RimeStatus, status);
+    if (rime->api->get_status(session_id, &status)) {
+      bool same = status.schema_id && strcmp(status.schema_id, schema_id) == 0;
+      rime->api->free_status(&status);
+      if (same) {
+        return true;
+      }
+    }
+  }
   char previous_schema[SCHEMA_MAXSTRLEN] = "";
   bool has_previous = false;
   int access_time = 0;
@@ -362,10 +378,10 @@ static void _collect_candidate_expansions(EmacsRime *rime,
   CandidateLinkedList *full_tail = NULL;
   CandidateLinkedList *prefix_tail = NULL;
   size_t examined = 0;
-  // Guard against highlight wraparound.  Heap-allocated because a fixed
-  // 64 KiB stack array is wasteful; the 4096 cap is a safety bound that
-  // is independent of LIMIT.
-  size_t(*seen)[2] = malloc(sizeof(size_t[2]) * 4096);
+  // One entry per examined state: the walk stops after LIMIT states
+  // (or 4096 when LIMIT is zero).
+  size_t seen_cap = (limit > 0 && limit < 4096) ? limit : 4096;
+  size_t(*seen)[2] = malloc(sizeof(size_t[2]) * seen_cap);
   size_t seen_count = 0;
   if (!seen) {
     return;
@@ -389,7 +405,7 @@ static void _collect_candidate_expansions(EmacsRime *rime,
         break;
       }
     }
-    if (dup || seen_count >= 4096) {
+    if (dup || seen_count >= seen_cap) {
       rime->api->free_context(&ctx);
       break;
     }
