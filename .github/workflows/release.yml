@@ -16,14 +16,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: MINGW64
-            pkg_prefix: mingw-w64-x86_64
-            base_archive: liberime-${{ github.ref_name }}-windows-x86_64
-            with_deps: false
-          - arch: MINGW64
-            pkg_prefix: mingw-w64-x86_64
-            base_archive: liberime-${{ github.ref_name }}-windows-x86_64
-            with_deps: true
           - arch: UCRT64
             pkg_prefix: mingw-w64-ucrt-x86_64
             base_archive: liberime-${{ github.ref_name }}-windows-ucrt-x86_64
@@ -156,8 +148,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # macos-14 is deprecated and now resolves to arm64; use the
+          # dedicated Intel image for the x86_64 build.
           - arch: x86_64
-            runner: macos-14
+            runner: macos-15-intel
             archive: liberime-${{ github.ref_name }}-macos-x86_64
           - arch: arm64
             runner: macos-latest
